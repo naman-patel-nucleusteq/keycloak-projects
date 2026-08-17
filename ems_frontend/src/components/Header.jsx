@@ -1,31 +1,44 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { doLogout, getUsername } from '../services/keycloak'; 
 
-const Header = () => {
+function Header() {
+  const username = getUsername(); 
+
   return (
-    <header className="bg-gray-900 text-white shadow-md">
-      <div className="max-w-7xl mx-auto px-6 py-4 grid grid-cols-2 sm:grid-cols-3 items-center">
+    <nav className="bg-slate-900 text-white shadow-md border-b border-slate-800">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         
-        {/* Left - Logo */}
-        <h1 className="text-2xl font-bold tracking-wide xl:-mx-12">
-          StaffTrack
-        </h1>
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-xl font-bold tracking-wide text-indigo-400 hover:text-indigo-300 transition">
+            Employee Management System
+          </Link>
+          <Link to="/employees" className="text-sm font-medium text-slate-300 hover:text-white transition">
+            Employees List
+          </Link>
+          <Link to="/add-employee" className="text-sm font-medium text-slate-300 hover:text-white transition">
+            Add Employee
+          </Link>
+        </div>
 
-        {/* Center - Nav Links */}
-        <nav className="flex justify-center text-nowrap space-x-6 text-[14px] md:text-[16px]">
-          <Link to="/" className="hover:font-semibold transition">Home</Link>
-          <Link to="/employees" className="hover:font-semibold transition">Employees</Link>
-          <Link to="/add-employee" className="hover:font-semibold transition">Add Employee</Link>
-        </nav>
-
-        {/* Right - Empty / Future */}
-        <div className="flex justify-end">
+        <div className="flex items-center gap-6">
+          {username && (
+            <span className="text-sm font-medium text-slate-400 hidden sm:inline">
+              Welcome, <strong className="text-indigo-200">{username}</strong>
+            </span>
+          )}
           
+          <button 
+            onClick={doLogout} 
+            className="cursor-pointer rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-rose-500 hover:shadow-rose-900/20 active:scale-95"
+          >
+            Sign Out
+          </button>
         </div>
 
       </div>
-    </header>
+    </nav>
   );
-};
+}
 
 export default Header;

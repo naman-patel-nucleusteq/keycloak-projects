@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+ 
+  mysql-db:
+    image: mysql:8.0
+    container_name: ems_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE_NAME}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - ems_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: ems_keycloak
+    command: start-dev
+    environment:
+      KC_DB: mysql                            
+      KC_DB_URL: jdbc:mysql://mysql-db:3306/keycloak_db 
+      KC_DB_USERNAME: ${KC_DB_USER}
+      KC_DB_PASSWORD: ${KC_DB_PASS}
+      KC_TRANSACTION_XA_ENABLED: "false" 
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASS}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - ems_network
+
+  emp-backend:
+    build: ems_backend/emp-backend 
+    container_name: emp_backend_app
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/${MYSQL_DATABASE_NAME}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DB_PASS}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8080/realms/ems-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/ems-realm/protocol/openid-connect/certs
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    networks:
+      - ems_network
+
+  emp-frontend:
+    build: ems_frontend 
+    container_name: emp_frontend_app
+    ports:
+      - "3000:80"
+    depends_on:
+      - emp-backend
+    networks:
+      - ems_network
+
+volumes:
+  mysql_data:
+
+networks:
+  ems_network:
+    driver: bridge

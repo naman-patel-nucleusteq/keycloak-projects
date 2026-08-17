@@ -27,7 +27,7 @@ const Home = () => {
 
         {/* Add Employee Button */}
         <button
-          onClick={() => navigate("/add")}
+          onClick={() => navigate("/add-employee")}
           className="text-lg bg-green-600 hover:bg-green-700 hover:cursor-pointer text-white px-6 py-3 rounded-lg shadow-md transition"
         >
           Add Employee
