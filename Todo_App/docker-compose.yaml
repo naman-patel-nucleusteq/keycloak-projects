@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+
+  todo-backend:
+    build:
+      context: ./todo-backend
+    container_name: todo_backend_app
+    ports:
+      - "9000:8080"
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8080/realms/ems-realm
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://ems_keycloak:8080/realms/ems-realm/protocol/openid-connect/certs
+      SPRING_H2_CONSOLE_SETTINGS_WEB_ALLOW_OTHERS: "true"
+    volumes:
+      - todo_h2_data:/app/data
+    networks:
+      - ems_network
+
+
+  todo-frontend:
+    build:
+      context: ./todo-frontend
+      dockerfile: Dockerfile
+    container_name: todo_frontend_ui
+    ports:
+      - "4000:80"
+    depends_on:
+      - todo-backend
+    networks:
+      - ems_network
+
+
+volumes:
+  todo_h2_data:
+
+networks:
+  ems_network:
+    external: true
+    name: employee_management_system_ems_network
